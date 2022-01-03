@@ -3,10 +3,12 @@ import 'flatpickr/dist/flatpickr.min.css';
 
 let timerTime = null;
 let isStart = false;
+let intervalId = null;
 const TIMER_INRERVAL = 1000;
 
 const refs = {
     btnStart: document.querySelector('button[data-start]'),
+    inputData: document.querySelector('#datetime-picker'),
     daysLаbel: document.querySelector('.value[data-days]'),
     hoursLаbel: document.querySelector('.value[data-hours]'),
     minutesLаbel: document.querySelector('.value[data-minutes]'),
@@ -16,7 +18,7 @@ const refs = {
 
 refs.btnStart.addEventListener('click', onBtnStartClick)
 
-switchDisabledBtn();
+switchDisabledBtn(!isStart);
 
 const options = {
   enableTime: true,
@@ -24,31 +26,36 @@ const options = {
   defaultDate: new Date(),
   minuteIncrement: 1,
     onClose(selectedDates) {
-        timerTime = selectedDates[0] - options.defaultDate
+        timerTime = selectedDates[0] - options.defaultDate;
         
-        if (timerTime <= 0) {
+        if (timerTime <= 0) {            
             window.alert('Выбранная дата должна быть больше текущей!');
             return;
-        }
-
-        isStart = !isStart;
-        switchDisabledBtn();      
+        }        
+        switchDisabledBtn(isStart);      
   },
 };
 
 new flatpickr('#datetime-picker', options);
 
 function onBtnStartClick() {
-    redrawValues();
-    isStart = !isStart;
-    switchDisabledBtn();
-    setInterval(resetInterval, TIMER_INRERVAL);
+    redrawValues(); 
 
+    switchDisabledBtn(!isStart);
+    switchDisabledInput(!isStart)
+    
+    isStart = !isStart; 
+    
+    intervalId = setInterval(resetInterval, TIMER_INRERVAL);
 }
 
 function resetInterval() {
+    if (timerTime <= TIMER_INRERVAL) {
+        clearInterval(intervalId); 
+        return;
+    }
+        
     timerTime -= TIMER_INRERVAL
-    console.log(timerTime);   
     redrawValues();
 }
 
@@ -60,8 +67,12 @@ function redrawValues() {
     refs.secondsLаbel.textContent = convertTime.seconds;
 }
 
-function switchDisabledBtn () {
-    refs.btnStart.disabled = !isStart;
+function switchDisabledInput(value) {
+    refs.inputData.disabled = value;
+}
+
+function switchDisabledBtn (value) {    
+    refs.btnStart.disabled = value;
 }
 
 function convertMs(ms) {
